@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Binäre Suche – Schüleraktiv</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+      max-width: 1000px;
+      margin-left: auto;
+      margin-right: auto;
+      color: #34495e;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-weight: 700;
+      font-size: 2.4em;
+      color: #2c3e50;
+    }
+    /* Container für alle Hauptabschnitte */
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    /* Bereich für Steuerungselemente */
+    .controls {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.1em;
+    }
+    .controls > * {
+      min-width: 150px;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      font-weight: 600;
+      color: #34495e;
+      font-size: 0.95em;
+    }
+    select, input[type="number"] {
+      margin-top: 6px;
+      padding: 6px 10px;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      font-size: 1em;
+      transition: border-color 0.3s ease;
+    }
+    select:focus, input[type="number"]:focus {
+      border-color: #2980b9;
+      outline: none;
+      box-shadow: 0 0 5px #2980b9;
+    }
+    button {
+      background-color: #27ae60;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 25px;
+      font-size: 1.1em;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background-color 0.25s ease;
+      flex-shrink: 0;
+      margin-top: 24px;
+      box-shadow: 0 3px 6px rgba(39, 174, 96, 0.5);
+    }
+    button:hover {
+      background-color: #219150;
+    }
+
+    /* Array Anzeige */
+    #arrayDisplay {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      background: white;
+      padding: 15px 10px;
+      border-radius: 10px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+      min-height: 80px;
+    }
+    .array-item {
+      flex: 0 0 60px;
+      background-color: #ecf0f1;
+      border-radius: 8px;
+      border: 1px solid #bdc3c7;
+      text-align: center;
+      padding: 8px 5px;
+      font-family: monospace;
+      user-select: none;
+      position: relative;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .array-item > .index {
+      font-size: 0.75em;
+      color: #7f8c8d;
+      margin-bottom: 3px;
+    }
+    .array-item.mid {
+      background-color: #d6ecf3;
+      border-color: #2980b9;
+      font-weight: 700;
+      box-shadow: 0 0 10px #2980b9aa;
+    }
+    .array-item.gray {
+      background-color: #bdc3c7 !important;
+      color: #7f8c8d;
+      border-color: #95a5a6 !important;
+    }
+
+    /* Feedback */
+    #feedback {
+      font-size: 1.2em;
+      font-weight: 700;
+      margin-top: 15px;
+      min-height: 30px;
+      text-align: center;
+      color: #2c3e50;
+      user-select: none;
+    }
+
+    /* Log Tabelle */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+      font-size: 0.95em;
+      user-select: none;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px 8px;
+      text-align: center;
+      color: #34495e;
+    }
+    th {
+      background-color: #2980b9;
+      color: #ecf0f1;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    tr:nth-child(even) td {
+      background-color: #f7f9fb;
+    }
+    @media (max-width: 600px) {
+      .controls {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .array-item {
+        flex: 0 0 40px;
+        padding: 6px 3px;
+      }
+      button {
+        width: 100%;
+        padding: 12px 0;
+      }
+    }
+    @media print {
+      button, input, select, label {
+        display: none !important;
+      }
+      body {
+        max-width: none;
+        padding: 0;
+        margin: 0;
+      }
+      table {
+        font-size: 12pt;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Binäre Suche</h1>
+
+  <div class="container">
+
+    <div class="controls" aria-label="Einstellungen und Eingaben">
+      <label for="arraySize">
+        Größe des Arrays (max. 40)
+        <select id="arraySize" onchange="init()">
+          <!-- Options von 5 bis 40 -->
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="15">15</option>
+          <option value="16">16</option>
+          <option value="17">17</option>
+          <option value="18">18</option>
+          <option value="19">19</option>
+          <option value="20">20</option>
+          <option value="21">21</option>
+          <option value="22">22</option>
+          <option value="23">23</option>
+          <option value="24">24</option>
+          <option value="25">25</option>
+          <option value="26">26</option>
+          <option value="27">27</option>
+          <option value="28">28</option>
+          <option value="29">29</option>
+          <option value="30">30</option>
+          <option value="31">31</option>
+          <option value="32">32</option>
+          <option value="33">33</option>
+          <option value="34">34</option>
+          <option value="35">35</option>
+          <option value="36">36</option>
+          <option value="37">37</option>
+          <option value="38">38</option>
+          <option value="39">39</option>
+          <option value="40">40</option>
+        </select>
+      </label>
+
+      <div><strong>Gesuchte Zahl:</strong> <span id="targetValue" aria-live="polite" style="color:#2980b9;"></span></div>
+    </div>
+
+    <div id="arrayDisplay" aria-label="Array Werte mit Indizes" role="list"></div>
+
+    <form class="controls" id="stepForm" onsubmit="event.preventDefault(); submitStep();">
+      <label for="start">Start (Index)
+        <input type="number" id="start" min="0" />
+      </label>
+      <label for="middle">Mitte (Index)
+        <input type="number" id="middle" min="0" />
+      </label>
+      <label for="end">Ende (Index)
+        <input type="number" id="end" min="0" />
+      </label>
+      <label for="direction">Richtung
+        <select id="direction" aria-label="Suchrichtung wählen">
+          <option value="gefunden">Gefunden</option>
+          <option value="links">Links</option>
+          <option value="rechts">Rechts</option>
+        </select>
+      </label>
+
+      <button type="submit">Schritt abschicken</button>
+    </form>
+
+    <div id="feedback" role="alert" aria-live="assertive"></div>
+
+    <table id="logTable" aria-label="Log der Suchschritte">
+      <thead>
+        <tr>
+          <th>Schritt</th>
+          <th>Start</th>
+          <th>Mitte</th>
+          <th>Ende</th>
+          <th>Wert an Mitte</th>
+          <th>Richtung</th>
+          <th>Rückmeldung</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+  </div>
+
+<script>
+  let array = [];
+  let target = 0;
+  let stepCounter = 0;
+
+  function init() {
+    const size = parseInt(document.getElementById("arraySize").value);
+    array = Array.from({ length: size }, () => Math.floor(Math.random() * 100));
+    array.sort((a, b) => a - b);
+    target = array[Math.floor(Math.random() * array.length)];
+    document.getElementById("targetValue").textContent = target;
+    stepCounter = 0;
+    document.querySelector("#logTable tbody").innerHTML = "";
+    renderArray();
+    clearInputs();
+    setInputsMax(size);
+  }
+
+  function setInputsMax(max) {
+    ['start', 'middle', 'end'].forEach(id => {
+      const el = document.getElementById(id);
+      el.max = max - 1;
+      if (parseInt(el.value) >= max) el.value = "";
+    });
+  }
+
+  function renderArray(start = null, mid = null, end = null) {
+    const container = document.getElementById("arrayDisplay");
+    container.innerHTML = "";
+    array.forEach((val, idx) => {
+      const item = document.createElement("div");
+      item.className = "array-item";
+      if (start !== null && end !== null && (idx < start || idx > end)) {
+        item.classList.add("gray");
+      }
+      if (mid !== null && idx === mid) {
+        item.classList.add("mid");
+      }
+      item.setAttribute('role', 'listitem');
+      item.innerHTML = `<div class="index">${idx}</div><div>${val}</div>`;
+      container.appendChild(item);
+    });
+  }
+
+  function clearInputs() {
+    document.getElementById("start").value = "";
+    document.getElementById("middle").value = "";
+    document.getElementById("end").value = "";
+    document.getElementById("feedback").textContent = "";
+  }
+
+  function submitStep() {
+    const start = parseInt(document.getElementById("start").value);
+    const mid = parseInt(document.getElementById("middle").value);
+    const end = parseInt(document.getElementById("end").value);
+    const direction = document.getElementById("direction").value;
+    const feedbackEl = document.getElementById("feedback");
+
+    if (
+      isNaN(start) || isNaN(mid) || isNaN(end) ||
+      start < 0 || end >= array.length ||
+      mid < start || mid > end || start > end
+    ) {
+      feedbackEl.textContent = "❌ Ungültige Eingabe. Bitte überprüfe Start, Mitte und Ende (Index gültig und Reihenfolge korrekt).";
+      feedbackEl.style.color = "crimson";
+      return;
+    }
+
+    const midVal = array[mid];
+    let correctDir = "";
+    if (midVal === target) correctDir = "gefunden";
+    else if (midVal < target) correctDir = "rechts";
+    else correctDir = "links";
+
+    let result = "";
+    if (direction === correctDir) {
+      result = direction === "gefunden" ? "✅ Richtig! Zahl gefunden." :
+               direction === "links" ? "✅ Richtig! Suche links weiter." :
+               "✅ Richtig! Suche rechts weiter.";
+      feedbackEl.style.color = "#27ae60";
+    } else {
+      result = `❌ Falsch. Richtige Richtung wäre: ${correctDir === "gefunden" ? "Gefunden" : correctDir === "links" ? "Links" : "Rechts"}`;
+      feedbackEl.style.color = "crimson";
+    }
+
+    feedbackEl.textContent = result;
+    renderArray(start, mid, end);
+
+    stepCounter++;
+    const tbody = document.querySelector("#logTable tbody");
+    const row = tbody.insertRow();
+    row.insertCell(0).textContent = stepCounter;
+    row.insertCell(1).textContent = start;
+    row.insertCell(2).textContent = mid;
+    row.insertCell(3).textContent = end;
+    row.insertCell(4).textContent = midVal;
+    row.insertCell(5).textContent = direction;
+    row.insertCell(6).textContent = result;
+
+    clearInputs();
+  }
+
+  window.onload = init;
+</script>
+
+</body>
+</html>
